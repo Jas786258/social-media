@@ -6,7 +6,7 @@ from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.impute import SimpleImputer
 
 # Load dataset (replace with your dataset file path)
-data = pd.read_csv('your_dataset.csv')
+data = pd.read_csv('netflix_titles.csv')
 
 # 1. Handling missing values
 # a) Using SimpleImputer to fill missing numerical values with the mean
