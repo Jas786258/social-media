@@ -1,0 +1,167 @@
+### Sentiment Analysis of Netflix Reviews Using KMeans Clustering and Logistic Regression
+
+In this example, we'll perform sentiment analysis of Netflix reviews using the following steps:
+
+1. **Data Preprocessing**: Load the dataset, clean the text, and perform text vectorization (e.g., TF-IDF).
+2. **Clustering with KMeans**: Apply KMeans clustering to group similar reviews.
+3. **Logistic Regression**: Train a logistic regression model for sentiment classification.
+4. **Evaluate the Results**: Check the performance of the model.
+
+This example assumes you have a dataset of Netflix reviews, where each review contains a text and a sentiment label (positive or negative). If you don't have the dataset, you can simulate a simple one for demonstration purposes.
+
+We'll break the solution into two main parts:
+- **Part 1: KMeans Clustering** for exploring unsupervised clustering of reviews.
+- **Part 2: Logistic Regression** for supervised sentiment classification.
+
+### **Requirements**:
+```bash
+pip install pandas numpy sklearn seaborn matplotlib nltk
+```
+
+### **1. Preprocessing the Data**
+
+```python
+# Import necessary libraries
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.cluster import KMeans
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+import matplotlib.pyplot as plt
+import seaborn as sns
+import nltk
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+
+# Load the dataset (replace with your dataset path)
+# Assuming your dataset is in CSV format with columns 'review' and 'sentiment'
+# sentiment: 1 = Positive, 0 = Negative (you can adjust this based on your dataset)
+df = pd.read_csv('netflix_titles.csv')
+
+# Sample DataFrame if you don't have the dataset (for illustration purposes)
+ df = pd.DataFrame({
+     'review': ['Great movie!', 'Worst movie ever', 'Loved it', 'Horrible experience', 'Awesome plot', 'Bad acting'],
+     'sentiment': [1, 0, 1, 0, 1, 0]
+ })
+
+# 2. Data Preprocessing: Cleaning text data
+
+# Lowercase the text
+df['review'] = df['review'].str.lower()
+
+# Remove punctuation and special characters
+df['review'] = df['review'].str.replace('[^a-zA-Z\s]', '', regex=True)
+
+# Remove stopwords and apply lemmatization
+nltk.download('stopwords')
+nltk.download('wordnet')
+
+stop_words = set(stopwords.words('english'))
+lemmatizer = WordNetLemmatizer()
+
+def preprocess_text(text):
+    # Tokenize, remove stopwords and lemmatize
+    tokens = text.split()
+    tokens = [lemmatizer.lemmatize(word) for word in tokens if word not in stop_words]
+    return ' '.join(tokens)
+
+df['cleaned_review'] = df['review'].apply(preprocess_text)
+
+# Display the first few rows of the cleaned data
+print(df.head())
+```
+
+### **2. KMeans Clustering for Review Groups**
+
+We'll apply KMeans clustering on the text data to group similar reviews (e.g., positive and negative clusters).
+
+```python
+# 3. Feature Extraction: Convert text data to numerical features (TF-IDF Vectorization)
+tfidf_vectorizer = TfidfVectorizer(max_features=5000)  # Use top 5000 features
+X = tfidf_vectorizer.fit_transform(df['cleaned_review']).toarray()
+
+# 4. Apply KMeans Clustering
+kmeans = KMeans(n_clusters=2, random_state=42)  # Assuming 2 clusters (positive & negative reviews)
+kmeans.fit(X)
+
+# Add the cluster labels to the dataframe
+df['cluster'] = kmeans.labels_
+
+# Visualize the clusters using a scatter plot (if needed)
+plt.figure(figsize=(8, 6))
+sns.scatterplot(x=X[:, 0], y=X[:, 1], hue=df['cluster'], palette='viridis', marker='o')
+plt.title('KMeans Clustering of Netflix Reviews')
+plt.show()
+
+# Show a few reviews for each cluster
+print("Cluster 0 reviews:")
+print(df[df['cluster'] == 0]['review'].head())
+print("\nCluster 1 reviews:")
+print(df[df['cluster'] == 1]['review'].head())
+```
+
+### **3. Sentiment Classification with Logistic Regression**
+
+Now, we use Logistic Regression to train a sentiment classification model based on the cleaned text data.
+
+```python
+# 5. Sentiment Analysis with Logistic Regression
+
+ Prepare the features (X) and target (y)
+X = tfidf_vectorizer.fit_transform(df['cleaned_review']).toarray()
+y = df['sentiment']  # 1 for Positive, 0 for Negative
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Initialize the Logistic Regression model
+log_reg = LogisticRegression(max_iter=1000)
+
+# Train the model
+log_reg.fit(X_train, y_train)
+
+# Make predictions
+y_pred = log_reg.predict(X_test)
+
+# 6. Evaluate the model
+print(f'Accuracy: {accuracy_score(y_test, y_pred)}')
+print('Confusion Matrix:')
+print(confusion_matrix(y_test, y_pred))
+print('Classification Report:')
+print(classification_report(y_test, y_pred))
+
+# Visualize the confusion matrix
+conf_matrix = confusion_matrix(y_test, y_pred)
+sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', xticklabels=['Negative', 'Positive'], yticklabels=['Negative', 'Positive'])
+plt.xlabel('Predicted')
+plt.ylabel('Actual')
+plt.title('Confusion Matrix')
+plt.show()
+```
+
+### **Explanation of the Steps**:
+
+1. **Text Preprocessing**:
+   - The review text is converted to lowercase, cleaned of punctuation, and stopwords are removed.
+   - **Lemmatization** is used to reduce words to their base forms (e.g., "running" becomes "run").
+   
+2. **KMeans Clustering**:
+   - **TF-IDF (Term Frequency-Inverse Document Frequency)** is used to convert the text data into numerical vectors. This method gives more weight to rare words that are important for distinguishing between reviews.
+   - **KMeans clustering** is applied to group reviews into clusters. The assumption here is that there are two main groups (positive and negative), but this can be adjusted for more clusters if necessary.
+
+3. **Logistic Regression**:
+   - After preprocessing and vectorization, we split the data into a training and testing set (80%-20% split).
+   - **Logistic Regression** is used for sentiment classification. The model predicts whether the sentiment of a review is positive or negative.
+   - **Accuracy** and the **Confusion Matrix** are used to evaluate the model's performance.
+
+### **Output**:
+- The KMeans clustering will group the reviews into two clusters, which you can inspect to see if they correspond to positive or negative sentiment.
+- The logistic regression model will classify reviews as positive or negative, and the confusion matrix will show how well it performed on the test set.
+
+### **Next Steps**:
+- **Hyperparameter Tuning**: You can improve the logistic regression model by tuning parameters such as `C` (regularization strength).
+- **More Advanced Models**: For better accuracy, consider using models like **Naive Bayes**, **Random Forest**, or **Deep Learning models** (e.g., LSTM or BERT) for sentiment analysis.
+
+Let me know if you need further details or adjustments for your use case!
