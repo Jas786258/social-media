@@ -1,0 +1,49 @@
+# Import necessary libraries
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.impute import SimpleImputer
+
+# Load dataset (replace with your dataset file path)
+data = pd.read_csv('your_dataset.csv')
+
+# 1. Handling missing values
+# a) Using SimpleImputer to fill missing numerical values with the mean
+imputer = SimpleImputer(strategy='mean')  # can also be 'median' or 'most_frequent'
+numerical_columns = data.select_dtypes(include=['float64', 'int64']).columns
+data[numerical_columns] = imputer.fit_transform(data[numerical_columns])
+
+# b) For categorical columns, you may fill missing values with the most frequent value
+categorical_columns = data.select_dtypes(include=['object']).columns
+imputer_cat = SimpleImputer(strategy='most_frequent')
+data[categorical_columns] = imputer_cat.fit_transform(data[categorical_columns])
+
+# 2. Encoding categorical variables
+# Label Encoding: Convert categorical labels to numerical labels
+label_encoders = {}
+for col in categorical_columns:
+    le = LabelEncoder()
+    data[col] = le.fit_transform(data[col].astype(str))
+    label_encoders[col] = le
+
+# 3. Feature scaling
+# Standardize the features to have a mean of 0 and a standard deviation of 1
+scaler = StandardScaler()
+data[numerical_columns] = scaler.fit_transform(data[numerical_columns])
+
+# 4. Splitting the dataset into training and test sets
+X = data.drop('target_column', axis=1)  # Features (exclude target column)
+y = data['target_column']  # Target variable
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Print the preprocessed data and check for any issues
+print("Training data shape:", X_train.shape)
+print("Testing data shape:", X_test.shape)
+print("First few rows of the preprocessed data:")
+print(X_train.head())
+
+# Example: Saving the preprocessed data (optional)
+# X_train.to_csv('X_train_preprocessed.csv', index=False)
+# X_test.to_csv('X_test_preprocessed.csv', index=False)
