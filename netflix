@@ -1,0 +1,14 @@
+import os
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+from itertools import combinations
+from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
+from scipy.stats import chi2_contingency
+from sklearn.metrics import silhouette_score
+from sklearn.preprocessing import StandardScaler
+file_path = "/content/Amazon Customer Behavior Survey.csv"
+df = pd.read_csv(file_path)
+df.head()
